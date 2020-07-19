@@ -1,2 +1,2 @@
 # gateAssignment
-Gate Assignment, Passenger Connection, Mixed Linear Programming, CPLEX
+Gate Assignment, Passenger Connection, Integer Programming, CPLEX, Optimization
