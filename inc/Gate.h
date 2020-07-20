@@ -1,4 +1,5 @@
 #pragma once
+#include<iostream>
 #include <string>
 
 
@@ -29,7 +30,7 @@ public:
 
    struct sortAlphabeticPtr
    {
-      bool operator()(const Gate* gt1, const Gate* gt2) const
+      bool operator()(const std::shared_ptr<Gate> gt1, const std::shared_ptr<Gate> gt2) const
       {
          return (gt1->getgateID() < gt2->getgateID());
       }

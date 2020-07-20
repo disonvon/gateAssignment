@@ -1,4 +1,5 @@
 #pragma once
+#include<iostream>
 #include <map>
 #include <vector>
 #include "Gate.h"
@@ -10,7 +11,7 @@ class DataManager
 {
 
 public:
-   static DataManager * instance()
+   static DataManager * instance()//棒啊，设计模式中的单例模式
    {
       if (!_instance)
       {
@@ -37,39 +38,39 @@ public:
 
    static std::map<std::string, std::pair<int, int> > transitPattern;
 
-   const std::vector<Gate *>& getGates() const
+   const std::vector<std::shared_ptr<Gate>>& getGates() const
    {
       return _gates;
    }
 
 
-   const std::vector<Puck *>& getPucks() const
+   const std::vector<std::shared_ptr<Puck>>& getPucks() const
    {
       return _pucks;
    }
 
 
-   const std::vector<Ticket *>& getTickets() const
+   const std::vector<std::shared_ptr<Ticket>>& getTickets() const
    {
       return _tickets;
    }
 
-   const std::vector<Ticket *>& getIncludedTickets() const
+   const std::vector<std::shared_ptr<Ticket>>& getIncludedTickets() const
    {
       return _includedTickets;
    }
 
-   const std::vector<Puck *>& getIncludedPucks() const
+   const std::vector<std::shared_ptr<Puck>>& getIncludedPucks() const
    {
       return _includedPucks;
    }
 
    int getMinute(const std::string & val);
 
-   void addGates(Gate * gate);
-   void addPucks(Puck * puck);
-   void addIncludedPucks(Puck * puck);
-   void addTickets(Ticket * ticket);
+   void addGates(std::shared_ptr<Gate> gate);
+   void addPucks(std::shared_ptr<Puck> puck);
+   void addIncludedPucks(std::shared_ptr<Puck> puck);
+   void addTickets(std::shared_ptr<Ticket> ticket);
 
 
 
@@ -77,16 +78,16 @@ public:
    void readPuck();
    void readTicket();
    void preprocess();
-   //std::vector<Puck *> getincludedPucks() { return _includedPucks; }
-   //std::vector<Gate *> getGates() { return _gates; }
+   //std::vector<std::shared_ptr<Puck>> getincludedPucks() { return _includedPucks; }
+   //std::vector<std::shared_ptr<Gate>> getGates() { return _gates; }
 
 
 public:
-   std::vector<Gate *> _gates; 
-   std::vector<Puck *> _pucks;
-   std::vector<Puck *> _includedPucks;
-   std::vector<Ticket *> _tickets;
-   std::vector<Ticket *> _includedTickets;
+   std::vector<std::shared_ptr<Gate>> _gates; 
+   std::vector<std::shared_ptr<Puck>> _pucks;
+   std::vector<std::shared_ptr<Puck>> _includedPucks;
+   std::vector<std::shared_ptr<Ticket>> _tickets;
+   std::vector<std::shared_ptr<Ticket>> _includedTickets;
 
    std::map<const std::string, std::pair<int, int>> ticketsPuckIdx;
 

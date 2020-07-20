@@ -57,22 +57,22 @@ int DataManager::getMinute(const std::string & val)
    }
    return minute;
 }
-void DataManager::addGates(Gate * gate)
+void DataManager::addGates(std::shared_ptr<Gate> gate)
 {
    _gates.push_back(gate);
 }
 
-void DataManager::addPucks(Puck * puck)
+void DataManager::addPucks(std::shared_ptr<Puck> puck)
 {
    _pucks.push_back(puck);
 }
 
-void DataManager::addTickets(Ticket * ticket)
+void DataManager::addTickets(std::shared_ptr<Ticket> ticket)
 {
    _tickets.push_back(ticket);
 }
 
-void DataManager::addIncludedPucks(Puck * puck)
+void DataManager::addIncludedPucks(std::shared_ptr<Puck> puck)
 {
    _includedPucks.push_back(puck);
 }
@@ -81,12 +81,11 @@ void DataManager::addIncludedPucks(Puck * puck)
 void DataManager::readPuck()
 {
    //TODO: read directory info from outside config file
-   std::ifstream puck ("C:/OR/gate/data/puck.csv");
+   std::ifstream puck ("C:/Users/dednn/Desktop/Code_Git/Gate-Assugnment/data/puck.csv");
    std::string line;
    if (puck.good())
    {
       int lineNumber = 0;
-      Puck tempPuck;
       while (std::getline(puck, line))
       {
          if (lineNumber >= 1)
@@ -116,8 +115,8 @@ void DataManager::readPuck()
             upAirport = fields[10];
             downAirport = fields[11];
 
-            Puck * puckptr = new Puck(puckID, arrDate, arrMinute, arrFlight, arrType, acType,
-               depDate, depMinute, depFlight, depType, upAirport, downAirport, "");
+            std::shared_ptr<Puck> puckptr(new Puck(puckID, arrDate, arrMinute, arrFlight, arrType, acType,
+               depDate, depMinute, depFlight, depType, upAirport, downAirport, ""));
 
             _pucks.push_back(puckptr);
          }
@@ -129,14 +128,14 @@ void DataManager::readPuck()
 void DataManager::readTicket()
 {
    //TODO: read directory info from outside config file
-   std::ifstream ticket("C:/OR/gate/data/tickets.csv");
+   std::ifstream ticket("C:/Users/dednn/Desktop/Code_Git/Gate-Assugnment/data/tickets.csv");
    std::string line;
 
    if (ticket.good())
    {
       int lineNumber = 0;
       //Gate * gateptr = DataManager::instance()->_gates[lineNumber];
-      Ticket * ticketptr = new Ticket();
+      std::shared_ptr<Ticket> ticketptr(new Ticket());
       while (std::getline(ticket, line))
       {
          if (lineNumber >= 1)
@@ -161,7 +160,7 @@ void DataManager::readTicket()
             depdate = fields[5];
 
 
-            Ticket * ticketptr = new Ticket(id, num, arrflight, arrdate, depflight, depdate);
+			std::shared_ptr<Ticket> ticketptr(new Ticket(id, num, arrflight, arrdate, depflight, depdate));
 
             _tickets.push_back(ticketptr);
          }
@@ -174,14 +173,13 @@ void DataManager::readTicket()
 void DataManager::readGate()
 {
    //TODO: read directory info from outside config file
-   std::ifstream gate("C:/OR/gate/data/gates.csv");
+   std::ifstream gate("C:/Users/dednn/Desktop/Code_Git/Gate-Assugnment/data/gates.csv");
    std::string line;
 
    if (gate.good())
    {
       int lineNumber = 0;
       //Gate * gateptr = DataManager::instance()->_gates[lineNumber];
-      Gate * gatetptr = new Gate();
       while (std::getline(gate, line))
       {
          if (lineNumber >= 1)
@@ -206,7 +204,7 @@ void DataManager::readGate()
             bodyty = fields[5];
 
 
-            Gate * gatekptr = new Gate(id, term, regn, arrty, depty, bodyty);
+			std::shared_ptr<Gate> gatekptr(new Gate(id, term, regn, arrty, depty, bodyty));
 
             _gates.push_back(gatekptr);
          }
