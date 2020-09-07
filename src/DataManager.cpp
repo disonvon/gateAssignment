@@ -277,7 +277,7 @@ void DataManager::preprocess()
       }
 
       //init ticket corresponding puck idx, ticket departure leg pair with 
-      for (auto ticket : _includedTickets)
+      for (auto ticket : _includedTickets)//TODO : why
       {
 
          int tempArrIdx = -1, temDepIdx = -1;
