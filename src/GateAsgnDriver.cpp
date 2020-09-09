@@ -27,11 +27,11 @@ GateAsgnDriver::~GateAsgnDriver()
 
 void GateAsgnDriver::initValidVariableAsgnIndex()
 {//TODO:: get back later
-   //std::vector<Puck *> pucks = _dataManager.getIncludedPucks();
-   //std::vector<Gate*> gates = _dataManager.getGates();
-   //for (const Puck * const puck : pucks)
+   //std::vector<std::shared_ptr<Puck>> pucks = _dataManager.getIncludedPucks();
+   //std::vector<std::shared_ptr<Gate>> gates = _dataManager.getGates();
+   //for (const std::shared_ptr<Puck> const puck : pucks)
    //{
-   //   for (const Gate * const gate : gates)
+   //   for (const std::shared_ptr<Gate> const gate : gates)
    //   {
    //      if (puck->getarrType() == gate->getarrType())
    //      {

@@ -26,30 +26,30 @@ public:
    ~gam();
 
 
-   const std::vector<Gate *>& getGates() const
+   const std::vector<std::shared_ptr<Gate>>& getGates() const
    {
       return gates;
    }
-   void addGateData(const std::vector<Gate *> &givenGates)
+   void addGateData(const std::vector<std::shared_ptr<Gate>> &givenGates)
    {
       gates = givenGates;
    }
 
 
-   const std::vector<Puck *>& getPucks() const
+   const std::vector<std::shared_ptr<Puck>>& getPucks() const
    {
       return pucks;
    }
-   void addPuckData(const std::vector<Puck *>& givenPucks)
+   void addPuckData(const std::vector<std::shared_ptr<Puck>>& givenPucks)
    {
       pucks = givenPucks;
    }
 
-   const std::vector<Ticket *>& getTickets() const
+   const std::vector<std::shared_ptr<Ticket>>& getTickets() const
    {
       return tickets;
    }
-   void addTicketData(const std::vector<Ticket *>& givenTickets)
+   void addTicketData(const std::vector<std::shared_ptr<Ticket>>& givenTickets)
    {
       tickets = givenTickets;
    }
@@ -101,18 +101,18 @@ public:
 private:
    // Vector mapping for puck, gate within gam module
    std::map<std::string, size_t>      gateIndex; // gate index
-   std::map<std::string, Gate*>   gateMap;   // gate map
+   std::map<std::string, std::shared_ptr<Gate>>   gateMap;   // gate map
 
    std::map<std::string, size_t>      puckIndex; // puck index
-   std::map<std::string, Puck*>   puckMap;   // puck map
+   std::map<std::string, std::shared_ptr<Puck>>   puckMap;   // puck map
 
    std::map<std::string, size_t>      ticketIndex; // puck index
-   std::map<std::string, Ticket*>   ticketMap;   // puck map
+   std::map<std::string, std::shared_ptr<Ticket>>   ticketMap;   // puck map
 
-   std::vector<Gate *> gates;
-   std::vector<Puck *> pucks;
-   //std::vector<Puck *> includedPucks;
-   std::vector<Ticket *> tickets;
+   std::vector<std::shared_ptr<Gate>> gates;
+   std::vector<std::shared_ptr<Puck>> pucks;
+   //std::vector<std::shared_ptr<Puck>> includedPucks;
+   std::vector<std::shared_ptr<Ticket>> tickets;
    std::map<const std::string, std::pair<int, int>> ticketsPuckIdx;
 
    std::map<size_t, size_t> validGateAsgnIndex;

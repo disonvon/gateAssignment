@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-
+#include <iostream>
 class Ticket
 {
 public:
@@ -31,7 +31,7 @@ public:
 
    struct sortAlphabeticPtr
    {
-      bool operator()(const Ticket* tk1, const Ticket* tk2) const
+      bool operator()(const std::shared_ptr<Ticket> tk1, const std::shared_ptr<Ticket> tk2) const
       {
          return (tk1->getpaxID() < tk2->getpaxID());
       }
