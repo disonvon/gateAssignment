@@ -8,6 +8,6 @@ int main(int argc, char* argv[])
    gateDriver.optimize();
 
 
-
+   system("pause");
    return 0;
 }

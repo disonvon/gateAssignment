@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-
+#include<iostream>
 
 class Puck
 {
@@ -48,7 +48,7 @@ public:
 
    struct sortAlphabeticPtr
    {
-      bool operator()(const Puck* pk1, const Puck* pk2) const
+      bool operator()(const std::shared_ptr<Puck> pk1, const std::shared_ptr<Puck> pk2) const
       {
          return (pk1->getpuckId() < pk2->getpuckId());
       }

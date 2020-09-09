@@ -1,0 +1,25 @@
+SCENE_DIRECTORY  C:\OR\gate
+DEBUG_VERBOSE 1
+PROBLEMTOSOLVE 3
+TAUBOOITERATIONS 50
+CPLEXTIMELIMITATION 600
+NORMALGATEASSIGNBONUS -100
+REMOTEGATEASSIGNBONUS 10
+FIXEDGATECOST 50
+REMOTEGATEFIXEDCOST 10000
+PAXCONNCOSTPERMIN 1
+
+
+END END
+
+==============================
+SCENE_DIRECTORY Scenario path, will override the degfault command line argument
+DEBUG_VERBOSE 1 for  print console and to file options
+PROBLEMTOSOLVE 1,2,3 for different question
+TAUBOOITERATIONS #of iterations for tauboo search
+CPLEXTIMELIMITATION  seconds to be used by CPLEX
+NORMALGATEASSIGNBONUS coeeficient value for assigning pucks on normal gates
+REMOTEGATEASSIGNBONUS coeeficient value for assigning pucks on remote gates
+FIXEDGATECOST coeeficient value for assigning pucks on remote gates
+REMOTEGATEFIXEDCOST coeeficient value for assigning pucks on remote gates 
+PAXCONNCOSTPERMIN cost for pax connection, unit, 1/1000
