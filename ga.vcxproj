@@ -24,6 +24,7 @@
     <ClCompile Include="src\Gate.cpp" />
     <ClCompile Include="src\GateAsgnDriver.cpp" />
     <ClCompile Include="src\GateAsgnMain.cpp" />
+    <ClCompile Include="src\ParameterRegistry.cpp" />
     <ClCompile Include="src\Puck.cpp" />
     <ClCompile Include="src\Ticket.cpp" />
   </ItemGroup>
@@ -32,6 +33,7 @@
     <ClInclude Include="inc\gam.h" />
     <ClInclude Include="inc\Gate.h" />
     <ClInclude Include="inc\GateAsgnDriver.h" />
+    <ClInclude Include="inc\ParameterRegistry.h" />
     <ClInclude Include="inc\Puck.h" />
     <ClInclude Include="inc\Ticket.h" />
   </ItemGroup>
@@ -131,7 +133,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\Git\orapps\Tools\ILOG\Cplex\12.6.0.1\concert\include;..\..\Git\orapps\Tools\ILOG\Cplex\12.6.0.1\cplex\include;..\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Git\orapps\Tools\ILOG\Cplex\12.6.0.1\cplex\include;C:\Git\orapps\Tools\ILOG\Cplex\12.6.0.1\concert\include;..\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>IL_STD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>

@@ -5,6 +5,7 @@
 #include "../inc/DataManager.h"
 #include "../inc/Puck.h"
 #include "../inc/Ticket.h"
+#include "../inc/ParameterRegistry.h"
 
 
 DataManager * DataManager::_instance = nullptr;
@@ -78,14 +79,15 @@ void DataManager::addIncludedPucks(std::shared_ptr<Puck> puck)
 }
 
 
-void DataManager::readPuck()
+void DataManager::readPuck(const std::string& dirName)
 {
-   //TODO: read directory info from outside config file
-   std::ifstream puck ("C:/Users/dednn/Desktop/Code_Git/Gate-Assugnment/data/puck.csv");
+   std::string inputFile = dirName + "data/puck.csv";
+   std::ifstream puck (inputFile);
    std::string line;
    if (puck.good())
    {
       int lineNumber = 0;
+      Puck tempPuck;
       while (std::getline(puck, line))
       {
          if (lineNumber >= 1)
@@ -115,7 +117,7 @@ void DataManager::readPuck()
             upAirport = fields[10];
             downAirport = fields[11];
 
-            std::shared_ptr<Puck> puckptr(new Puck(puckID, arrDate, arrMinute, arrFlight, arrType, acType,
+            std::shared_ptr<Puck> puckptr( new Puck(puckID, arrDate, arrMinute, arrFlight, arrType, acType,
                depDate, depMinute, depFlight, depType, upAirport, downAirport, ""));
 
             _pucks.push_back(puckptr);
@@ -125,17 +127,17 @@ void DataManager::readPuck()
    }
 }
 
-void DataManager::readTicket()
+void DataManager::readTicket(const std::string& dirName)
 {
-   //TODO: read directory info from outside config file
-   std::ifstream ticket("C:/Users/dednn/Desktop/Code_Git/Gate-Assugnment/data/tickets.csv");
+   std::string inputFile = dirName + "data/tickets.csv";
+   std::ifstream ticket(inputFile);
    std::string line;
 
    if (ticket.good())
    {
       int lineNumber = 0;
       //Gate * gateptr = DataManager::instance()->_gates[lineNumber];
-      std::shared_ptr<Ticket> ticketptr(new Ticket());
+      Ticket * ticketptr = new Ticket();
       while (std::getline(ticket, line))
       {
          if (lineNumber >= 1)
@@ -160,9 +162,9 @@ void DataManager::readTicket()
             depdate = fields[5];
 
 
-			std::shared_ptr<Ticket> ticketptr(new Ticket(id, num, arrflight, arrdate, depflight, depdate));
+            std::shared_ptr<Ticket> ticketPtr( new Ticket(id, num, arrflight, arrdate, depflight, depdate));
 
-            _tickets.push_back(ticketptr);
+            _tickets.push_back(ticketPtr);
          }
          lineNumber++;
       }
@@ -170,16 +172,17 @@ void DataManager::readTicket()
    }
 }
 
-void DataManager::readGate()
+void DataManager::readGate(const std::string& dirName)
 {
-   //TODO: read directory info from outside config file
-   std::ifstream gate("C:/Users/dednn/Desktop/Code_Git/Gate-Assugnment/data/gates.csv");
+   std::string inputFile = dirName + "data/gates.csv";
+   std::ifstream gate(inputFile);
    std::string line;
 
    if (gate.good())
    {
       int lineNumber = 0;
       //Gate * gateptr = DataManager::instance()->_gates[lineNumber];
+      Gate * gatetptr = new Gate();
       while (std::getline(gate, line))
       {
          if (lineNumber >= 1)
@@ -204,7 +207,7 @@ void DataManager::readGate()
             bodyty = fields[5];
 
 
-			std::shared_ptr<Gate> gatekptr(new Gate(id, term, regn, arrty, depty, bodyty));
+            std::shared_ptr<Gate> gatekptr ( new Gate(id, term, regn, arrty, depty, bodyty));
 
             _gates.push_back(gatekptr);
          }
@@ -277,7 +280,7 @@ void DataManager::preprocess()
       }
 
       //init ticket corresponding puck idx, ticket departure leg pair with 
-      for (auto ticket : _includedTickets)//TODO : why
+      for (auto ticket : _includedTickets)
       {
 
          int tempArrIdx = -1, temDepIdx = -1;
@@ -285,7 +288,7 @@ void DataManager::preprocess()
          int itr1 = 0;
          for (auto puck : _includedPucks)
          {
-            if (ticket->getarrDate() == puck->getarrDate() & ticket->getarrFlight() == puck->getarrFlight())
+            if (ticket->getarrDate() == puck->getarrDate() && ticket->getarrFlight() == puck->getarrFlight())
             {
                tempArrIdx = itr1;
                break;
@@ -296,14 +299,14 @@ void DataManager::preprocess()
          int itr2 = 0;
          for (auto puck : _includedPucks)
          {
-            if (ticket->getdepDate() == puck->getdepDate() & ticket->getdepFlight() == puck->getdepFlight())
+            if (ticket->getdepDate() == puck->getdepDate() && ticket->getdepFlight() == puck->getdepFlight())
             {
                temDepIdx = itr2;
                break;
             }
             ++itr2;
          }
-         if (tempArrIdx != -1 & temDepIdx != -1)
+         if ((tempArrIdx != -1) && (temDepIdx != -1))
          {
             ticketsPuckIdx[ticket->getpaxID()].first = tempArrIdx;
             ticketsPuckIdx[ticket->getpaxID()].second = temDepIdx;

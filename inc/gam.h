@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -80,6 +81,7 @@ public:
 
    void addPuckRegionTerm(IloExpr &objExpr);
    void addTicketRegionTerm(IloExpr &objExpr);
+   int getRegionIdx(const int gateIdx);
 
 
 
@@ -92,21 +94,29 @@ public:
 
    void solveInitModel();
    void querySolution();
+   void runTabuSearchModel();
+   void updateSolutionGatePuckAssigned(IloNumArray puckAssign);
+   double evaluateObjective();
+   //double getCostChange(const int ithKeyIdx, const int jthKeyIdx, IloNumArray puckRemote);
+
+   void tabuOptimization(const int numIterations);
    static const int PaxWalkTime[7][7];
    static const std::map<int, int> flowTransitTime;
   
-
+   static std::stringstream values;
+   static std::stringstream& getCoefficients() { return values; };
+   static void clearCoefficients() { values.str(""); };
 
 
 private:
    // Vector mapping for puck, gate within gam module
-   std::map<std::string, size_t>      gateIndex; // gate index
+   std::map<std::string, int>      gateIndex; // gate index
    std::map<std::string, std::shared_ptr<Gate>>   gateMap;   // gate map
 
-   std::map<std::string, size_t>      puckIndex; // puck index
+   std::map<std::string, int>      puckIndex; // puck index
    std::map<std::string, std::shared_ptr<Puck>>   puckMap;   // puck map
 
-   std::map<std::string, size_t>      ticketIndex; // puck index
+   std::map<std::string, int>      ticketIndex; // puck index
    std::map<std::string, std::shared_ptr<Ticket>>   ticketMap;   // puck map
 
    std::vector<std::shared_ptr<Gate>> gates;
@@ -115,26 +125,17 @@ private:
    std::vector<std::shared_ptr<Ticket>> tickets;
    std::map<const std::string, std::pair<int, int>> ticketsPuckIdx;
 
-   std::map<size_t, size_t> validGateAsgnIndex;
-   std::map<size_t, size_t>::iterator iValidGateAsgnIndex;
+   std::map<int, int> validGateAsgnIndex; //<gates*pucks+jthpuck, ith>
+   std::map<int, int> validAsgnIndex; //<ith, gates*pucks+jthpuck>
+
+   std::map<int, std::set<int>> puckGateMap;
+   std::map<int, int>::iterator iValidGateAsgnIndex;
 
    std::set<int> puckIDtoS;
    std::set<int> puckIDtoT;
 
-   std::map<size_t, int> puckIDtoRegion;
+   std::map<int, int> puckIDtoRegion;
    std::map<int, std::set<int>> puckRegion;
-
-
-   DataManager * datamanager;
-
-   const double normalGateAssignBonus = -100; //coeeficient value for assigning pucks on normal gates
-   const double remoteGateAssignBonus = 10; //coeeficient value for assigning pucks on remote gates
-   const double fixedGatePenalty = 50; //coeeficient value for assigning pucks on remote gates
-   const double remoteFixedGatePenalty = 10000; //coeeficient value for assigning pucks on remote gates
-   const double paxConnectPenaltyPerMinute = 0.001; //
-
-   const bool solveModel2 = true;
-   const bool solveModel3 = false;
 
 
    //decison variable
@@ -145,7 +146,6 @@ private:
    IloIntVarArray PuckLoationTIndicator;
    IloIntVarArray PuckRegionIndicator;
    IloIntVarArray TicketRegionPairIndicator;
-
 
 
 
@@ -171,4 +171,8 @@ private:
    bool _modelSolved;          // true if SrmModel solves successfully
                                //SRM objective
    double gam_obj;
+
+public:
+   std::map<int, std::set<int>> solutionGateAssginedPuck;
+
 };

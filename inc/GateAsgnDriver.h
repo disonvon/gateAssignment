@@ -5,7 +5,7 @@
 #include "gam.h"
 
 
-
+class ParameterRegistry;
 
 class GateAsgnDriver
 {
@@ -15,16 +15,20 @@ public:
 
    GateAsgnDriver();
    ~GateAsgnDriver();
-   void initValidVariableAsgnIndex();
+
+   void readConfigurationFile();
+
    void optimize();
    void solveModel();
    void initializeGAM();
    void solveGAM();
    void extractSolution();
+   void exportSolution();
 
 
 private:
-   //DataManager  _dataManager;
+   ParameterRegistry* paraRegistry;
+   DataManager* dataMgr;
    std::unique_ptr<gam> _gam;
 
 };

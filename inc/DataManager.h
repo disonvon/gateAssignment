@@ -1,18 +1,19 @@
 #pragma once
 #include<iostream>
 #include <map>
+#include <memory>
 #include <vector>
-
 #include "Gate.h"
 #include "Puck.h"
 
+class ParameterRegistry;
 class Ticket;
 
 class DataManager
 {
 
 public:
-   static DataManager * instance()//棒啊，设计模式中的单例模式
+   static DataManager * instance()
    {
       if (!_instance)
       {
@@ -75,9 +76,9 @@ public:
 
 
 
-   void readGate();
-   void readPuck();
-   void readTicket();
+   void readGate(const std::string &dirName);
+   void readPuck(const std::string& dirName);
+   void readTicket(const std::string& dirName);
    void preprocess();
    //std::vector<std::shared_ptr<Puck>> getincludedPucks() { return _includedPucks; }
    //std::vector<std::shared_ptr<Gate>> getGates() { return _gates; }
@@ -97,7 +98,6 @@ public:
 
 private:
    static DataManager * _instance;
-   //static DataManager * _dataManager;
 
 
 };

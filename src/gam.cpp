@@ -4,7 +4,7 @@
 
 #include "../inc/gam.h"
 #include "../inc/DataManager.h"
-
+#include  "../inc/ParameterRegistry.h"
 
 gam::gam(const IloEnv& env)
    : _env(env)
@@ -36,7 +36,7 @@ const int gam::PaxWalkTime[7][7] = { { 10, 15, 20, 25, 20, 25, 25 },
 const std::map<int, int> gam::flowTransitTime = { {0, 15}, {1, 28}, {2, 28}, {3, 15}, {4, 35}, {5, 48}, {6, 48}, {7, 35}, {8, 35},
                                                          {9, 48}, {10, 48}, {11, 61}, {12, 20}, {13, 38}, {14, 38}, {15, 20}};
 
-
+std::stringstream gam::values;
 
 void gam::initMaps()
 {
@@ -46,8 +46,8 @@ void gam::initMaps()
    // sort puck based on puckID
    std::stable_sort(pucks.begin(), pucks.end(), Puck::sortAlphabeticPtr());
    // aircraft information
-   const size_t nPuck = pucks.size();
-   for (size_t j = 0; j < nPuck; j++)
+   const int nPuck = pucks.size();
+   for (int j = 0; j < nPuck; j++)
    {
       puckIndex[pucks[j]->getpuckId()] = j;
       puckMap[pucks[j]->getpuckId()] = pucks[j];
@@ -55,8 +55,8 @@ void gam::initMaps()
 
    // gate information
    std::stable_sort(gates.begin(), gates.end(), Gate::sortAlphabeticPtr());
-   size_t nGates = gates.size();
-   for (size_t j = 0; j < nGates; j++)
+   int nGates = gates.size();
+   for (int j = 0; j < nGates; j++)
    {
       gateIndex[gates[j]->getgateID()] = j;
       gateMap[gates[j]->getgateID()] = gates[j];
@@ -64,8 +64,8 @@ void gam::initMaps()
 
    // ticket information
    std::stable_sort(tickets.begin(), tickets.end(), Ticket::sortAlphabeticPtr());
-   size_t nTickets = tickets.size();
-   for (size_t j = 0; j < nTickets; j++)
+   int nTickets = tickets.size();
+   for (int j = 0; j < nTickets; j++)
    {
       ticketIndex[tickets[j]->getpaxID()] = j;
       ticketMap[tickets[j]->getpaxID()] = tickets[j];
@@ -77,20 +77,25 @@ void gam::initMaps()
 
 void gam::initValidVariableAsgnIndex()
 {
-   size_t itr1 = 0;
-   const size_t nPucks = pucks.size();
-   size_t k = 0;
+   int itr1 = 0;
+   int k = 0;
+   const int nPucks = pucks.size();
    for (auto gate : gates)
    {
+
       for (auto puck : pucks)
       {
          // recorder valid assign index for each puck-gate
-         if ((gate->getarrType().find(puck->getarrType()) != std::string::npos) & (gate->getdepType().find(puck->getdepType()) != std::string::npos)
-            & (puck->getpuckBodyType() == gate->getbodyType()))
+         if ((gate->getarrType().find(puck->getarrType()) != std::string::npos) && (gate->getdepType().find(puck->getdepType()) != std::string::npos)
+            && (puck->getpuckBodyType() == gate->getbodyType()))
          {
-            size_t itr2 = puckIndex[puck->getpuckId()];      // determine gateIndex
-            size_t j = itr1 * nPucks + itr2;              // determine corresponding index
+            int puckIdx = puckIndex[puck->getpuckId()];      // determine puckIdx
+            int gateIdx = gateIndex[gate->getgateID()];      // determine puckIdx
+
+            int j = itr1 * nPucks + puckIdx;              // determine corresponding index
             validGateAsgnIndex[j] = k;
+            validAsgnIndex[k] = j;
+            puckGateMap[puckIdx].insert(gateIdx);
             k++;
          }
       }
@@ -102,7 +107,7 @@ void gam::initValidVariableAsgnIndex()
 
 void gam::initValidPuckTermIndex()
 {
-   size_t nPucks = pucks.size();
+   int nPucks = pucks.size();
 
 
    for (auto const & ivalidAsssign : validGateAsgnIndex)
@@ -129,31 +134,31 @@ void gam::initValidPuckTermIndex()
       }
 
       int regionNum = -1;
-      if (gates[iGateIdx]->getterminal() == "T" & gates[iGateIdx]->getregion() == "North")
+      if (gates[iGateIdx]->getterminal() == "T" && gates[iGateIdx]->getregion() == "North")
       {
          regionNum = 0;//T_North-T_North
       }
-      else if (gates[iGateIdx]->getterminal() == "T" & gates[iGateIdx]->getregion() == "Center")
+      else if (gates[iGateIdx]->getterminal() == "T" && gates[iGateIdx]->getregion() == "Center")
       {
          regionNum = 1;//
       }
-      else if (gates[iGateIdx]->getterminal() == "T" & gates[iGateIdx]->getregion() == "South")
+      else if (gates[iGateIdx]->getterminal() == "T" && gates[iGateIdx]->getregion() == "South")
       {
          regionNum = 2;//
       }
-      else if (gates[iGateIdx]->getterminal() == "S" & gates[iGateIdx]->getregion() == "North")
+      else if (gates[iGateIdx]->getterminal() == "S" && gates[iGateIdx]->getregion() == "North")
       {
          regionNum = 3;//
       }
-      else if (gates[iGateIdx]->getterminal() == "S" & gates[iGateIdx]->getregion() == "Center")
+      else if (gates[iGateIdx]->getterminal() == "S" && gates[iGateIdx]->getregion() == "Center")
       {
          regionNum = 4;//
       }
-      else if (gates[iGateIdx]->getterminal() == "S" & gates[iGateIdx]->getregion() == "South")
+      else if (gates[iGateIdx]->getterminal() == "S" && gates[iGateIdx]->getregion() == "South")
       {
          regionNum = 5;//
       }
-      else if (gates[iGateIdx]->getterminal() == "S" & gates[iGateIdx]->getregion() == "East")
+      else if (gates[iGateIdx]->getterminal() == "S" && gates[iGateIdx]->getregion() == "East")
       {
          regionNum = 6;//
       }
@@ -170,8 +175,8 @@ void gam::initValidPuckTermIndex()
 void gam::initModel()
 {
    //local parameters
-   const size_t nPuckGates = validGateAsgnIndex.size();
-   const size_t nPucks = pucks.size();//just a large number
+   const int nPuckGates = validGateAsgnIndex.size();
+   const int nPucks = pucks.size();//just a large number
    const short nGates = gates.size();
    const int nPuckTermS = puckIDtoS.size();
    const int nPuckTernT = puckIDtoT.size();
@@ -205,11 +210,18 @@ void gam::initModel()
       PuckAssign = IloIntVarArray(_env, nPuckGates, 0, 1);
       PuckRemote = IloIntVarArray(_env, nPucks, 0, 1);
       GatesUsed = IloNumVarArray(_env, nGates + 1, 0, 1);
-      PuckLoationSIndicator = IloIntVarArray(_env, nPuckTermS, 0, 1);
-      PuckLoationTIndicator = IloIntVarArray(_env, nPuckTernT, 0, 1);
-      PuckRegionIndicator = IloIntVarArray(_env, nPuckRegions, 0, 1);
+      if (ParameterRegistry::instance()->objFunction == 2)
+      {
+         PuckLoationSIndicator = IloIntVarArray(_env, nPuckTermS, 0, 1);
+         PuckLoationTIndicator = IloIntVarArray(_env, nPuckTernT, 0, 1);
+      }
+      else if (ParameterRegistry::instance()->objFunction == 3)
+      {
+         PuckRegionIndicator = IloIntVarArray(_env, nPuckRegions, 0, 1);
+         TicketRegionPairIndicator = IloIntVarArray(_env, nTicketRegions, 0, 1);
+      }
 
-      TicketRegionPairIndicator = IloIntVarArray(_env, nTicketRegions, 0, 1);
+
 
       //constraints initialization
       PuckCover = IloRangeArray(_env, 0);
@@ -247,12 +259,12 @@ void gam::initObjective()
       addGateNumberTerm(objExpr);
 
       ////add puck location term
-      if (solveModel2)
+      if (ParameterRegistry::instance()->objFunction == 2)
       {
          addPuckLocationTerm(objExpr);
       }
 
-      if(solveModel3)
+      if (ParameterRegistry::instance()->objFunction == 3)
       {
          addPuckRegionTerm(objExpr);
          addTicketRegionTerm(objExpr);
@@ -279,12 +291,12 @@ void gam::initConstraints()
       formulateGateUsedConstr();
       formualteGroundConnctConstr();
 
-      if (solveModel2)
+      if (ParameterRegistry::instance()->objFunction == 2) 
       {
          formualtePuckLocationConstr();
       }
 
-      if (solveModel3)
+      if (ParameterRegistry::instance()->objFunction == 3)
       {
          formualtePuckRegionConstr();
          formualteTicketRegionConstr();
@@ -301,7 +313,7 @@ void gam::initConstraints()
 void gam::addPuckAssignTerm(IloExpr &objExpr)
 {
    //determin objective function value
-   const size_t nPucks = pucks.size();
+   const int nPucks = pucks.size();
 
    for (const auto & iValidGateAssign : validGateAsgnIndex)
    {
@@ -310,7 +322,7 @@ void gam::addPuckAssignTerm(IloExpr &objExpr)
 
       int j = iValidGateAssign.second;
 
-      objExpr += normalGateAssignBonus * PuckAssign[j];
+      objExpr += ParameterRegistry::instance()->normalGateAssignBonus * PuckAssign[j];
 
       //set variable name
       std::string varName = "PuckAssign_" + gates[iGateIdx]->getgateID() + "_" + std::to_string(pucks[iPuckIdx]->getarrMinute()) + 
@@ -322,7 +334,7 @@ void gam::addPuckAssignTerm(IloExpr &objExpr)
 
 void gam::addPuckLocationTerm(IloExpr& objExpr)
 {
-   size_t itr1 = 0;
+   int itr1 = 0;
    for (auto puckTerm: puckIDtoS)
    {
       //set variable name
@@ -332,7 +344,7 @@ void gam::addPuckLocationTerm(IloExpr& objExpr)
       ++itr1;
    }
 
-   size_t itr2 = 0;
+   int itr2 = 0;
    for (auto puckTerm : puckIDtoT)
    {
       //set variable name
@@ -358,21 +370,21 @@ void gam::addPuckLocationTerm(IloExpr& objExpr)
          std::string arrType = pucks[arrPuckIdx]->getarrType();
          std::string depType = pucks[depPuckIdx]->getdepType();
 
-         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) & (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
+         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) && (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
          {
             auto idxArr = std::distance(puckIDtoS.begin(), puckIDtoS.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoS.begin(), puckIDtoS.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 15;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 35;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 45;
             }
@@ -381,24 +393,24 @@ void gam::addPuckLocationTerm(IloExpr& objExpr)
                turnTime = 20;
             }
 
-            objExpr += PuckLoationSIndicator[idxArr] * PuckLoationSIndicator[idxDep] * turnTime * ticket->getPaxNum() * paxConnectPenaltyPerMinute;
+            objExpr += PuckLoationSIndicator[idxArr] * PuckLoationSIndicator[idxDep] * turnTime * ticket->getPaxNum() * ParameterRegistry::instance()->paxConnectPenaltyPerMinute;
          }
 
-         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) & (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
+         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) && (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
          {
             auto idxArr = std::distance(puckIDtoS.begin(), puckIDtoS.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoT.begin(), puckIDtoT.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 20;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 40;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 40;
             }
@@ -407,24 +419,24 @@ void gam::addPuckLocationTerm(IloExpr& objExpr)
                turnTime = 30;
             }
 
-            objExpr += PuckLoationSIndicator[idxArr] * PuckLoationTIndicator[idxDep] * turnTime * ticket->getPaxNum()* paxConnectPenaltyPerMinute;
+            objExpr += PuckLoationSIndicator[idxArr] * PuckLoationTIndicator[idxDep] * turnTime * ticket->getPaxNum()* ParameterRegistry::instance()->paxConnectPenaltyPerMinute;
          }
 
-         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) & (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
+         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) && (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
          {
             auto idxArr = std::distance(puckIDtoT.begin(), puckIDtoT.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoT.begin(), puckIDtoT.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 15;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 35;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 35;
             }
@@ -433,24 +445,24 @@ void gam::addPuckLocationTerm(IloExpr& objExpr)
                turnTime = 20;
             }
 
-            objExpr += PuckLoationTIndicator[idxArr] * PuckLoationTIndicator[idxDep] * turnTime * ticket->getPaxNum() * paxConnectPenaltyPerMinute;
+            objExpr += PuckLoationTIndicator[idxArr] * PuckLoationTIndicator[idxDep] * turnTime * ticket->getPaxNum() * ParameterRegistry::instance()->paxConnectPenaltyPerMinute;
          }
 
-         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) & (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
+         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) && (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
          {
             auto idxArr = std::distance(puckIDtoT.begin(), puckIDtoT.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoS.begin(), puckIDtoS.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 20;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 40;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 40;
             }
@@ -459,7 +471,7 @@ void gam::addPuckLocationTerm(IloExpr& objExpr)
                turnTime = 30;
             }
 
-            objExpr += PuckLoationTIndicator[idxArr] * PuckLoationSIndicator[idxDep] * turnTime * ticket->getPaxNum() * paxConnectPenaltyPerMinute;
+            objExpr += PuckLoationTIndicator[idxArr] * PuckLoationSIndicator[idxDep] * turnTime * ticket->getPaxNum() * ParameterRegistry::instance()->paxConnectPenaltyPerMinute;
          }
       }
    }
@@ -470,12 +482,12 @@ void gam::addPuckLocationTerm(IloExpr& objExpr)
 
 void gam::addPuckRemote(IloExpr& objExpr)
 {
-   size_t j = 0;
+   int j = 0;
    for (const auto puck : pucks)
    {
 
 
-      objExpr += remoteGateAssignBonus * PuckRemote[j];
+      objExpr += ParameterRegistry::instance()->remoteGateAssignBonus * PuckRemote[j];
 
       std::string varName = "PuckRemote_" + puck->getpuckId();
       PuckRemote[j].setName(varName.c_str());
@@ -505,7 +517,6 @@ void gam::addPuckRegionTerm(IloExpr& objExpr)
 
 void gam::addTicketRegionTerm(IloExpr& objExpr)
 {
-   int numRegions = 7;
    int i = 0;
    int flightTransitTime;
    for (auto const & ticketPuck : ticketsPuckIdx)
@@ -521,19 +532,19 @@ void gam::addTicketRegionTerm(IloExpr& objExpr)
       std::string depType = depPuck->getdepType();
 
       int caseStartIdx = 0;
-      if (arrType == "D" & depType == "D")
+      if (arrType == "D" && depType == "D")
       {
          caseStartIdx = 0;
       }
-      else if (arrType == "D" & depType == "I")
+      else if (arrType == "D" && depType == "I")
       {
          caseStartIdx = 4;
       }
-      else if (arrType == "I" & depType == "D")
+      else if (arrType == "I" && depType == "D")
       {
          caseStartIdx = 8;
       }
-      else if (arrType == "I" & depType == "I")
+      else if (arrType == "I" && depType == "I")
       {
          caseStartIdx = 12;
       }
@@ -545,15 +556,15 @@ void gam::addTicketRegionTerm(IloExpr& objExpr)
          for (auto depRegion : puckRegion[depPuckIdx])
          {
             int addIdx;
-            if (arrRegion < 2 & depRegion < 2)
+            if (arrRegion < 2 && depRegion < 2)
             {
                addIdx = 0;
             }
-            else if (arrRegion < 2 & depRegion >= 2)
+            else if (arrRegion < 2 && depRegion >= 2)
             {
                addIdx = 1;
             }
-            else if (arrRegion >= 2 & depRegion < 2)
+            else if (arrRegion >= 2 && depRegion < 2)
             {
                addIdx = 2;
             }
@@ -584,8 +595,8 @@ void gam::addTicketRegionTerm(IloExpr& objExpr)
 
 void gam::formulatePuckCoverConstr()
 {
-   size_t nPucks = pucks.size();
-   size_t i = 0;
+   int nPucks = pucks.size();
+   int i = 0;
 
    IloNumExprArray temExprGatePuck(_env);
 
@@ -645,11 +656,44 @@ void gam::solveInitModel()
          modelExtracted = true;
          //_algo.setOut(solver_srm);
       }
+      _algo.setParam(IloCplex::TiLim, ParameterRegistry::instance()->timeLimitation);
 
       if (_algo.solve())
       {
          _modelSolved = true;
          gam_obj = _algo.getObjValue();
+
+         IloNumArray puckAssign(_env);
+
+         //extract mip solution
+         _algo.getValues(PuckAssign, puckAssign);
+         updateSolutionGatePuckAssigned(puckAssign);
+
+         //debug only
+         if (ParameterRegistry::instance()->dataAnalysis == 1)
+         {
+            std::ofstream solutionStrm;
+            const std::string debugSolutionFileName = "mipsolution.csv";
+            solutionStrm.open(debugSolutionFileName.c_str());
+            if (solutionStrm.good())
+            {
+               solutionStrm << "PUCKID, GATEID, START, END" << std::endl;
+
+               for (int iGate = 0; iGate < gates.size(); ++iGate)
+               {
+                  auto iGateAssigned = solutionGateAssginedPuck[iGate];
+                  for (const auto iPuck : solutionGateAssginedPuck[iGate])
+                  {
+                     solutionStrm << pucks[iPuck]->getpuckId() << "," <<
+                        gates[iGate]->getgateID() << "," << pucks[iPuck]->getarrMinute() << "," << pucks[iPuck]->getdepMinute() << std::endl;
+
+                  }
+               }
+
+            }
+            solutionStrm.close();
+         }
+         puckAssign.end();
       }
       else
       {
@@ -658,7 +702,7 @@ void gam::solveInitModel()
 
       }
    }
-   catch (IloException&)
+   catch (IloException)
    {
       std::cout << "Failed to solve Model ... " << std::endl;
    }
@@ -679,11 +723,11 @@ void gam::addGateNumberTerm(IloExpr& objExpr)
 {
    //determin objective function value
 
-   size_t itr1 = 0;
+   int itr1 = 0;
 
    for (const auto gate : gates)
    {
-      objExpr += fixedGatePenalty * GatesUsed[itr1];
+      objExpr += ParameterRegistry::instance()->fixedGatePenalty * GatesUsed[itr1];
 
       //set variable name
       std::string varName = "Gate_" + gate->getgateID();
@@ -695,7 +739,7 @@ void gam::addGateNumberTerm(IloExpr& objExpr)
    }
 
    //add extra remote gate used penalty
-   objExpr += remoteFixedGatePenalty*GatesUsed[itr1];
+   objExpr += ParameterRegistry::instance()->remoteFixedGatePenalty*GatesUsed[itr1];
    //set variable name
    std::string varName = "Gate_Remote";
    GatesUsed[itr1].setName(varName.c_str());
@@ -708,7 +752,7 @@ void gam::addGateNumberTerm(IloExpr& objExpr)
 
 void gam::formualtePuckLocationConstr()
 {
-   size_t nPucks = pucks.size();
+   int nPucks = pucks.size();
    IloNumExprArray temExprTermS(_env);
    IloNumExprArray temExprTermT(_env);
 
@@ -779,7 +823,7 @@ void gam::formualtePuckLocationConstr()
 void gam::formulateGateUsedConstr()
 {
 
-   size_t nPucks = pucks.size();
+   int nPucks = pucks.size();
 
    IloNumExprArray temExprGateUsed(_env);
 
@@ -863,9 +907,9 @@ void gam::formualteGroundConnctConstr()
          int jPuckIdx = jValidGateAsgnIndex.first % nPucks;
 
          int acConnectTime = 45;//aircraft connection time is configurable later
-         if (((pucks[jPuckIdx]->getarrMinute() > pucks[iPuckIdx]->getarrMinute() - acConnectTime) & (pucks[jPuckIdx]->getarrMinute() < pucks[iPuckIdx]->getdepMinute() + acConnectTime)) |
-            ((pucks[jPuckIdx]->getdepMinute() > pucks[iPuckIdx]->getarrMinute() - acConnectTime) & (pucks[jPuckIdx]->getdepMinute() < pucks[iPuckIdx]->getdepMinute() + acConnectTime)) |
-            (pucks[jPuckIdx]->getarrMinute() <= pucks[iPuckIdx]->getarrMinute() - acConnectTime) & (pucks[jPuckIdx]->getdepMinute() >= pucks[iPuckIdx]->getdepMinute() + acConnectTime))
+         if (((pucks[jPuckIdx]->getarrMinute() > pucks[iPuckIdx]->getarrMinute() - acConnectTime) && (pucks[jPuckIdx]->getarrMinute() < pucks[iPuckIdx]->getdepMinute() + acConnectTime)) ||
+            ((pucks[jPuckIdx]->getdepMinute() > pucks[iPuckIdx]->getarrMinute() - acConnectTime) && (pucks[jPuckIdx]->getdepMinute() < pucks[iPuckIdx]->getdepMinute() + acConnectTime)) ||
+            (pucks[jPuckIdx]->getarrMinute() <= pucks[iPuckIdx]->getarrMinute() - acConnectTime) && (pucks[jPuckIdx]->getdepMinute() >= pucks[iPuckIdx]->getdepMinute() + acConnectTime))
 
          {
             IloExpr temExpr(_env);
@@ -1137,21 +1181,21 @@ void gam::querySolution()
          std::string arrType = pucks[arrPuckIdx]->getarrType();
          std::string depType = pucks[depPuckIdx]->getdepType();
 
-         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) & (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
+         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) && (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
          {
             auto idxArr = std::distance(puckIDtoS.begin(), puckIDtoS.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoS.begin(), puckIDtoS.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 15;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 35;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 45;
             }
@@ -1164,21 +1208,21 @@ void gam::querySolution()
             numPaxConnection += puckLoationSIndicator[idxArr] * puckLoationSIndicator[idxDep] * ticket->getPaxNum();
          }
 
-         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) & (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
+         if ((puckIDtoS.find(arrPuckIdx) != puckIDtoS.end()) && (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
          {
             auto idxArr = std::distance(puckIDtoS.begin(), puckIDtoS.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoT.begin(), puckIDtoT.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 20;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 40;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 40;
             }
@@ -1191,21 +1235,21 @@ void gam::querySolution()
             numPaxConnection += puckLoationSIndicator[idxArr] * puckLoationTIndicator[idxDep] * ticket->getPaxNum();
          }
 
-         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) & (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
+         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) && (puckIDtoT.find(depPuckIdx) != puckIDtoT.end()))
          {
             auto idxArr = std::distance(puckIDtoT.begin(), puckIDtoT.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoT.begin(), puckIDtoT.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 15;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 35;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 35;
             }
@@ -1218,21 +1262,21 @@ void gam::querySolution()
             numPaxConnection += puckLoationTIndicator[idxArr] * puckLoationTIndicator[idxDep] * ticket->getPaxNum();
          }
 
-         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) & (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
+         if ((puckIDtoT.find(arrPuckIdx) != puckIDtoT.end()) && (puckIDtoS.find(depPuckIdx) != puckIDtoS.end()))
          {
             auto idxArr = std::distance(puckIDtoT.begin(), puckIDtoT.find(arrPuckIdx));
             auto idxDep = std::distance(puckIDtoS.begin(), puckIDtoS.find(depPuckIdx));
 
             int turnTime = 0;
-            if (arrType == "D" & depType == "D")
+            if (arrType == "D" && depType == "D")
             {
                turnTime = 20;
             }
-            else if (arrType == "D" & depType == "I")
+            else if (arrType == "D" && depType == "I")
             {
                turnTime = 40;
             }
-            else if (arrType == "I" & depType == "D")
+            else if (arrType == "I" && depType == "D")
             {
                turnTime = 40;
             }
@@ -1251,4 +1295,626 @@ void gam::querySolution()
    std::cout << "pax connection time is: " << obj << std::endl;
    std::cout << "total num pax connection: " << numPaxConnection << std::endl;
 
+}
+
+void gam::updateSolutionGatePuckAssigned(IloNumArray puckAssign)
+{
+   solutionGateAssginedPuck.clear();
+   int nPucks = pucks.size();
+
+   int i = 0;
+   for (auto & ivalidAsssign : validGateAsgnIndex)
+   {
+      if (puckAssign[i] >= 1)
+      {
+         int iGateIdx = ivalidAsssign.first / nPucks;
+         int iPuckIdx = ivalidAsssign.first % nPucks;
+
+         solutionGateAssginedPuck[iGateIdx].insert(iPuckIdx);
+
+      }
+      ++i;
+   }
+}
+
+
+void gam::runTabuSearchModel()
+{
+   int numIterations = ParameterRegistry::instance()->totalNumTabuIter;
+   tabuOptimization(numIterations);
+
+}
+
+
+double gam::evaluateObjective()
+{
+   double bestost = 0;
+   //int numPuckViolations = 0;
+   double flightTransitTime;
+
+   for (auto const & ithticketsPuckIdx : ticketsPuckIdx)
+   {
+      int arrPuckIdx = ithticketsPuckIdx.second.first;
+      int depPuckIdx = ithticketsPuckIdx.second.second;
+
+      auto arrPuck = pucks[arrPuckIdx];
+      auto depPuck = pucks[depPuckIdx];
+
+      int iArrGateIdx = -1;
+      int iDepGateIdx = -1;
+
+      for (auto const& ithGateAssignedPuck : solutionGateAssginedPuck)
+      {
+         if (iArrGateIdx == -1)
+         {
+            auto arrPuckIdxAssigned = ithGateAssignedPuck.second.find(arrPuckIdx);
+            if (arrPuckIdxAssigned != ithGateAssignedPuck.second.end())
+            {
+               iArrGateIdx = ithGateAssignedPuck.first;
+            }
+         }
+
+         if (iDepGateIdx == -1)
+         {
+            auto depPuckIdxAssigned = ithGateAssignedPuck.second.find(depPuckIdx);
+            if (depPuckIdxAssigned != ithGateAssignedPuck.second.end())
+            {
+               iDepGateIdx = ithGateAssignedPuck.first;
+            }
+         }
+
+         if ((iArrGateIdx != -1) && (iDepGateIdx != -1))
+         {
+            break;
+         }
+      }
+      if ((iArrGateIdx != -1) && (iDepGateIdx != -1))
+      {
+         //flightTransitTime = depPuck->getdepMinute() - arrPuck->getarrMinute();
+         //if (flightTransitTime < 45)
+         //{
+         //   numPuckViolations++;
+         //}
+         std::string arrType = arrPuck->getarrType();
+         std::string depType = depPuck->getdepType();
+
+         int caseStartIdx = 0;
+         if (arrType == "D" && depType == "D")
+         {
+            caseStartIdx = 0;
+         }
+         else if (arrType == "D" && depType == "I")
+         {
+            caseStartIdx = 4;
+         }
+         else if (arrType == "I" && depType == "D")
+         {
+            caseStartIdx = 8;
+         }
+         else if (arrType == "I" && depType == "I")
+         {
+            caseStartIdx = 12;
+         }
+
+         int arrRegion, depRegion;
+
+         //TODO:use a function to extract region
+         arrRegion = getRegionIdx(iArrGateIdx);
+         depRegion = getRegionIdx(iDepGateIdx);
+
+         int walkTime;
+         int checkTrainTime;
+
+         int addIdx;
+         if (arrRegion < 2 && depRegion < 2)
+         {
+            addIdx = 0;
+         }
+         else if (arrRegion < 2 && depRegion >= 2)
+         {
+            addIdx = 1;
+         }
+         else if (arrRegion >= 2 && depRegion < 2)
+         {
+            addIdx = 2;
+         }
+         else
+         {
+            addIdx = 3;
+         }
+         flightTransitTime = depPuck->getdepMinute() - arrPuck->getarrMinute();
+         walkTime = PaxWalkTime[arrRegion][depRegion];
+         checkTrainTime = flowTransitTime.find(addIdx + caseStartIdx)->second;
+         int tickIdx = ticketIndex[ithticketsPuckIdx.first];
+         bestost += tickets[tickIdx]->getPaxNum() * (walkTime + checkTrainTime) / flightTransitTime;
+      }
+      
+   }
+   //bestost += numPuckViolations * 10000;//penalty for those conflict flight puck assignment - default 0 conflict
+   return bestost;
+}
+
+
+//double gam::getCostChange(const int ithKeyIdx, const int jthKeyIdx, IloNumArray puckRemoteVal)
+//{
+//   double costChange = 0;
+//
+//   int oldPuckIdx = validAsgnIndex.find(ithKeyIdx)->second() % pucks.size();
+//   int newPuckIdx = validAsgnIndex.find(jthKeyIdx)->second() % pucks.size();
+//   int gateIdx = validAsgnIndex.find(ithKeyIdx)->second() / pucks.size();
+//
+//   double bestost = 0;
+//   double flightTransitTime;
+//
+//   for (auto const& ithticketsPuckIdx : ticketsPuckIdx)
+//   {
+//      int arrPuckIdx = ithticketsPuckIdx.second.first;
+//      int depPuckIdx = ithticketsPuckIdx.second.second;
+//
+//      auto arrPuck = pucks[arrPuckIdx];
+//      auto depPuck = pucks[depPuckIdx];
+//
+//      if (puckRemoteVal[arrPuckIdx] == 0 && puckRemoteVal[depPuckIdx] == 0)
+//      {
+//         int iArrGateIdx = -1;
+//         int iDepGateIdx = -1;
+//
+//         //TODO: improve performance
+//         for (auto const& ithGateAssignedPuck : solutionGateAssginedPuck)
+//         {
+//            if (iArrGateIdx == -1)
+//            {
+//               auto arrPuckIdxAssigned = ithGateAssignedPuck.second.find(arrPuckIdx);
+//               if (arrPuckIdxAssigned != ithGateAssignedPuck.second.end())
+//               {
+//                  iArrGateIdx = ithGateAssignedPuck.first;
+//               }
+//            }
+//
+//            if (iDepGateIdx == -1)
+//            {
+//               auto depPuckIdxAssigned = ithGateAssignedPuck.second.find(depPuckIdx);
+//               if (depPuckIdxAssigned != ithGateAssignedPuck.second.end())
+//               {
+//                  iDepGateIdx = ithGateAssignedPuck.first;
+//               }
+//            }
+//
+//            if ((iArrGateIdx != -1) && (iDepGateIdx != -1))
+//            {
+//               break;
+//            }
+//         }
+//         if ((iArrGateIdx != -1) && (iDepGateIdx != -1))
+//         {
+//            std::string arrType = arrPuck->getarrType();
+//            std::string depType = depPuck->getdepType();
+//
+//            int caseStartIdx = 0;
+//            if (arrType == "D" && depType == "D")
+//            {
+//               caseStartIdx = 0;
+//            }
+//            else if (arrType == "D" && depType == "I")
+//            {
+//               caseStartIdx = 4;
+//            }
+//            else if (arrType == "I" && depType == "D")
+//            {
+//               caseStartIdx = 8;
+//            }
+//            else if (arrType == "I" && depType == "I")
+//            {
+//               caseStartIdx = 12;
+//            }
+//
+//            int arrRegion, depRegion;
+//
+//            //TODO:use a function to extract region
+//            arrRegion = getRegionIdx(iArrGateIdx);
+//            depRegion = getRegionIdx(iDepGateIdx);
+//
+//            int walkTime;
+//            int checkTrainTime;
+//
+//            int addIdx;
+//            if (arrRegion < 2 && depRegion < 2)
+//            {
+//               addIdx = 0;
+//            }
+//            else if (arrRegion < 2 && depRegion >= 2)
+//            {
+//               addIdx = 1;
+//            }
+//            else if (arrRegion >= 2 && depRegion < 2)
+//            {
+//               addIdx = 2;
+//            }
+//            else
+//            {
+//               addIdx = 3;
+//            }
+//
+//            walkTime = PaxWalkTime[arrRegion][depRegion];
+//            checkTrainTime = flowTransitTime.find(addIdx + caseStartIdx)->second;
+//            int tickIdx = ticketIndex[ithticketsPuckIdx.first];
+//            bestost += tickets[tickIdx]->getPaxNum() * (walkTime + checkTrainTime) / flightTransitTime;
+//         }
+//      }
+//   }
+//   return costChange;
+//}
+
+
+void gam::tabuOptimization(const int numIterations)
+{
+   IloNumArray puckRemote(_env);
+   IloNumArray puckAssign(_env);
+
+   _algo.getValues(PuckRemote, puckRemote);
+   _algo.getValues(PuckAssign, puckAssign);
+
+   int nPucks = pucks.size();
+   std::vector<int> puckAssignTabuList(validGateAsgnIndex.size(), 0);
+   double bestCost = evaluateObjective();
+   double cost = bestCost;
+
+   int i = 0;
+   while (i < numIterations)
+   {
+      for ( int j = 0; j < validGateAsgnIndex.size(); ++j )
+      {
+         if (puckAssignTabuList[j] > 0)
+         {
+            puckAssignTabuList[j] -= 1;
+         }
+      }
+
+      int exchangeIthIdxOld = -1;
+      int exchangeJthIdxOld = -1;
+      int exchangeIthIdxNew = -1;
+      int exchangeJthIdxNew = -1;
+      //bool isOuterrExchange = false;
+      bool isInnerExchange = false;
+      double minCostChange = 1000000000;
+
+      std::cout << "tabu iteration: " << i << " cost: " << cost << std::endl;
+
+      int iRand = rand() % 10;
+
+      //outer swap: swap assigned puck with unassigned puck
+
+      for (int ithPuck=0; ithPuck < nPucks;++ithPuck)
+      {
+         if (puckRemote[ithPuck] > 0)
+         {
+            //clock_t startTimeOuter = clock();
+            auto validAssignedGates = puckGateMap[ithPuck];
+            for (auto & ithValidGate : validAssignedGates)
+            {
+               auto ithGateAssignedPuck = solutionGateAssginedPuck[ithValidGate];
+
+               for (auto & ithPuckAssigned : ithGateAssignedPuck)
+               {
+                  ////only swap with legal turn time
+                  bool swappable = true;
+                  for (auto& ithPuckAssignedCompare : ithGateAssignedPuck)
+                  {
+                     if (ithPuckAssigned != ithPuckAssignedCompare)
+                     {
+                        if (((pucks[ithPuckAssignedCompare]->getarrMinute() > pucks[ithPuck]->getarrMinute() - 45) 
+                           && (pucks[ithPuckAssignedCompare]->getarrMinute() < pucks[ithPuck]->getdepMinute() + 45)) ||
+                           ((pucks[ithPuckAssignedCompare]->getdepMinute() > pucks[ithPuck]->getarrMinute() - 45) 
+                              && (pucks[ithPuckAssignedCompare]->getdepMinute() < pucks[ithPuck]->getdepMinute() + 45)) ||
+                           (pucks[ithPuckAssignedCompare]->getarrMinute() <= pucks[ithPuck]->getarrMinute() - 45) 
+                           && (pucks[ithPuckAssignedCompare]->getdepMinute() >= pucks[ithPuck]->getdepMinute() + 45))
+                        {
+                           swappable = false;
+                           continue;
+                        }
+                     }
+                  }
+
+                  if (!swappable)
+                  {
+                     continue;
+                  }
+
+                  int ithKeyIdx = ithValidGate * nPucks + ithPuck;
+                  int jthKeyIdx = ithValidGate * nPucks + ithPuckAssigned;
+
+                  int ithIdxNew = validGateAsgnIndex.find(ithKeyIdx)->second;
+                  int jthIdxNew = validGateAsgnIndex.find(jthKeyIdx)->second;
+
+
+                  puckAssign[jthIdxNew] = 0;
+                  puckAssign[ithIdxNew] = 1;
+
+                  solutionGateAssginedPuck[ithValidGate].insert(ithPuck);
+                  solutionGateAssginedPuck[ithValidGate].erase(ithPuckAssigned);
+
+                  //double costChange = getCostChange(ithKeyIdx, jthKeyIdx);
+                  double costChange = evaluateObjective();
+
+                  //clock_t endTime = clock();
+                  //std::cout << "evaluate: " << ithPuck << "," << (double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+
+
+                  if (costChange - cost < minCostChange)
+                  {
+                     if ((puckAssignTabuList[ithIdxNew] > 0) && (costChange > bestCost))
+                     {
+                        continue;
+                     }
+
+                     exchangeIthIdxNew = ithIdxNew;
+                     exchangeJthIdxNew = jthIdxNew;
+                     //isOuterrExchange = true;
+                     minCostChange = costChange - cost;
+                  }
+
+                  //set them to orignal value
+                  puckAssign[jthIdxNew] = 1;
+                  puckAssign[ithIdxNew] = 0;
+
+                  solutionGateAssginedPuck[ithValidGate].insert(ithPuckAssigned);
+                  solutionGateAssginedPuck[ithValidGate].erase(ithPuck);
+
+               }
+
+            }
+
+            //clock_t endTimeOuter = clock();
+            //std::cout << "outer-------------puck: " << ithPuck << "," << (double)(endTimeOuter - startTimeOuter) / CLOCKS_PER_SEC << "s" << std::endl;
+
+         }
+      }
+
+      //inner swap: swap within assigned pucks
+      for (int ithPuck = 0; ithPuck < nPucks; ++ithPuck)
+      {
+         if (puckRemote[ithPuck] <= 0)
+         {
+            //clock_t startTimeInner, endTimeInner;
+            //startTimeInner = clock();
+            int ithIdx = 0;
+            auto validAssignedGates = puckGateMap[ithPuck];
+            int tempGate = 0;
+            for (auto& ithValidGate : validAssignedGates)
+            {
+               int tempIdx = validGateAsgnIndex.find(ithValidGate * nPucks + ithPuck)->second;
+               //get the idx of the current puck assigned gate
+               if (puckAssign[tempIdx] > 0)
+               {
+                  ithIdx = tempIdx;
+                  tempGate = ithValidGate;
+                  break;
+               }
+               
+            }
+            for (auto & jthValidGate : validAssignedGates)
+            {
+               //puck should be swapped to another gate
+               if (tempGate == jthValidGate)
+               {
+                  continue;
+               }
+
+               auto jthGateAssignedPuck = solutionGateAssginedPuck[jthValidGate];
+               auto ithGateAssignedPuck = solutionGateAssginedPuck[tempGate];
+
+
+               for (auto & jthPuck : jthGateAssignedPuck)
+               {
+                  //only swap i, j to validate i, j gate
+                  if (puckGateMap[jthPuck].find(tempGate) == puckGateMap[jthPuck].end())
+                  {
+                     continue;
+                  }
+                  ////only swap with legal turn time
+                  bool swappable = true;
+                  for (auto& jthPuckAssignedCompare : jthGateAssignedPuck)
+                  { // validate on jth gate: ithpuck vs all pucks on ith gate except the one swapped out 
+                     if (jthPuck != jthPuckAssignedCompare)
+                     {
+                        if (((pucks[jthPuckAssignedCompare]->getarrMinute() > pucks[ithPuck]->getarrMinute() - 45)
+                           && (pucks[jthPuckAssignedCompare]->getarrMinute() < pucks[ithPuck]->getdepMinute() + 45)) ||
+                           ((pucks[jthPuckAssignedCompare]->getdepMinute() > pucks[ithPuck]->getarrMinute() - 45)
+                              && (pucks[jthPuckAssignedCompare]->getdepMinute() < pucks[ithPuck]->getdepMinute() + 45)) ||
+                           (pucks[jthPuckAssignedCompare]->getarrMinute() <= pucks[ithPuck]->getarrMinute() - 45)
+                           && (pucks[jthPuckAssignedCompare]->getdepMinute() >= pucks[ithPuck]->getdepMinute() + 45))
+                        {
+                           swappable = false;
+                           break;
+                        }
+                     }
+                  }
+                  if (!swappable)
+                  {
+                     continue;
+                  }
+                  //validate on ith gate: jth puck with all the rest on ith gate except ithpuck
+                  for (auto& ithPuckAssignedCompare : ithGateAssignedPuck)
+                  {  if (ithPuck != ithPuckAssignedCompare)
+                     {
+                        if (((pucks[ithPuckAssignedCompare]->getarrMinute() > pucks[jthPuck]->getarrMinute() - 45)
+                           && (pucks[ithPuckAssignedCompare]->getarrMinute() < pucks[jthPuck]->getdepMinute() + 45)) ||
+                           ((pucks[ithPuckAssignedCompare]->getdepMinute() > pucks[jthPuck]->getarrMinute() - 45)
+                              && (pucks[ithPuckAssignedCompare]->getdepMinute() < pucks[jthPuck]->getdepMinute() + 45)) ||
+                           (pucks[ithPuckAssignedCompare]->getarrMinute() <= pucks[jthPuck]->getarrMinute() - 45)
+                           && (pucks[ithPuckAssignedCompare]->getdepMinute() >= pucks[jthPuck]->getdepMinute() + 45))
+                        {
+                           swappable = false;
+                           break;
+                        }
+                     }
+                  }
+
+                  if (!swappable)
+                  {
+                     continue;
+                  }
+
+                  int jthIdx = validGateAsgnIndex.find(jthValidGate * nPucks + jthPuck)->second;
+
+                  puckAssign[ithIdx] = 0;
+                  puckAssign[jthIdx] = 0;
+                  int ithIdxNew = validGateAsgnIndex.find(tempGate * nPucks + jthPuck)->second;
+                  int jthIdxNew = validGateAsgnIndex.find(jthValidGate * nPucks + ithPuck)->second;
+                  puckAssign[ithIdxNew] = 1;
+                  puckAssign[jthIdxNew] = 1;
+
+
+                  solutionGateAssginedPuck[jthValidGate].insert(ithPuck);
+                  solutionGateAssginedPuck[jthValidGate].erase(jthPuck);
+
+                  solutionGateAssginedPuck[tempGate].insert(jthPuck);
+                  solutionGateAssginedPuck[tempGate].erase(ithPuck);
+
+
+                  //updateSolutionGatePuckAssigned(puckAssign);
+
+                  double costChange = evaluateObjective();
+                  //double costChange = getCostChange(ithKeyIdx, jthKeyIdx);
+
+
+                  if (costChange - cost < minCostChange)
+                  {
+                     if ((puckAssignTabuList[jthIdxNew] > 0 || puckAssignTabuList[ithIdxNew] > 0) && (costChange > bestCost))
+                     {
+                        continue;
+                     }
+                     exchangeIthIdxOld = ithIdx;
+                     exchangeJthIdxOld = jthIdx;
+                     exchangeIthIdxNew = ithIdxNew;
+                     exchangeJthIdxNew = jthIdxNew;
+                     isInnerExchange = true;
+                     minCostChange = costChange - cost;
+                  }
+
+                  //set them to orignal value
+                  puckAssign[ithIdx] = 1;
+                  puckAssign[jthIdx] = 1;
+                  puckAssign[ithIdxNew] = 0;
+                  puckAssign[jthIdxNew] = 0;
+                  //updateSolutionGatePuckAssigned(puckAssign);
+
+                  solutionGateAssginedPuck[jthValidGate].insert(jthPuck);
+                  solutionGateAssginedPuck[jthValidGate].erase(ithPuck);
+
+                  solutionGateAssginedPuck[tempGate].insert(ithPuck);
+                  solutionGateAssginedPuck[tempGate].erase(jthPuck);
+                  
+               }
+            }
+            //endTimeInner = clock();
+            //std::cout << "inner-----------puck: " << ithPuck << ","<< (double)(endTimeInner - startTimeInner) / CLOCKS_PER_SEC << "s" << std::endl;
+         }
+      }
+
+      if (isInnerExchange)
+      {
+         //update solution for evaluation
+         puckAssign[exchangeIthIdxNew] = 1;
+         puckAssign[exchangeJthIdxNew] = 1;
+         puckAssign[exchangeIthIdxOld] = 0;
+         puckAssign[exchangeJthIdxOld] = 0;
+
+
+         solutionGateAssginedPuck[(validAsgnIndex.find(exchangeIthIdxNew)->second) / nPucks].insert((validAsgnIndex.find(exchangeIthIdxNew)->second) % nPucks);
+         solutionGateAssginedPuck[(validAsgnIndex.find(exchangeIthIdxOld)->second) / nPucks].erase((validAsgnIndex.find(exchangeIthIdxOld)->second) % nPucks);
+
+         solutionGateAssginedPuck[(validAsgnIndex.find(exchangeJthIdxNew)->second) / nPucks].insert((validAsgnIndex.find(exchangeJthIdxNew)->second) % nPucks);
+         solutionGateAssginedPuck[(validAsgnIndex.find(exchangeJthIdxOld)->second) / nPucks].erase((validAsgnIndex.find(exchangeJthIdxOld)->second) % nPucks);
+         //std::cout << "######################################################" << std::endl;
+         //std::cout << "exchangeIthIdxNew: " << exchangeIthIdxNew << " insert: " << " validAsgnIndex.find(exchangeIthIdxNew)->second" << validAsgnIndex.find(exchangeIthIdxNew)->second << std::endl;
+
+         //std::cout << "gate: " << (validAsgnIndex.find(exchangeIthIdxNew)->second) / nPucks << " insert: " << validAsgnIndex.find(exchangeIthIdxNew)->second % nPucks << std::endl;
+         //std::cout << "gate: " << (validAsgnIndex.find(exchangeIthIdxOld)->second) / nPucks << " erase: " << validAsgnIndex.find(exchangeIthIdxOld)->second % nPucks << std::endl;
+
+         //std::cout << "gate: " << (validAsgnIndex.find(exchangeJthIdxNew)->second) / nPucks << " insert: " << validAsgnIndex.find(exchangeJthIdxNew)->second % nPucks << std::endl;
+         //std::cout << "gate: " << (validAsgnIndex.find(exchangeJthIdxOld)->second) / nPucks << " erase: " << validAsgnIndex.find(exchangeJthIdxOld)->second % nPucks << std::endl;
+
+
+
+      }
+      else
+      {  
+         //update solution for evaluation
+         puckRemote[(validAsgnIndex.find(exchangeIthIdxNew)->second) % nPucks] = 0;
+         puckRemote[(validAsgnIndex.find(exchangeJthIdxNew)->second) % nPucks] = 1;
+         puckAssign[exchangeJthIdxNew] = 0;
+         puckAssign[exchangeIthIdxNew] = 1;
+
+         solutionGateAssginedPuck[(validAsgnIndex.find(exchangeIthIdxNew)->second) / nPucks].insert((validAsgnIndex.find(exchangeIthIdxNew)->second) % nPucks);
+         solutionGateAssginedPuck[(validAsgnIndex.find(exchangeJthIdxNew)->second) / nPucks].erase((validAsgnIndex.find(exchangeJthIdxNew)->second) % nPucks);
+      }
+
+      std::cout << "min cost change:  " << minCostChange << std::endl;
+      if( minCostChange < 1000000000)
+      {
+         if (!isInnerExchange)
+         {
+            puckAssignTabuList[exchangeIthIdxNew] = iRand + 10;
+         }
+         else
+         {
+            puckAssignTabuList[exchangeIthIdxNew] = iRand + 10;
+            puckAssignTabuList[exchangeJthIdxNew] = iRand + 10;
+
+         }
+
+         //puckAssignTabuList[exchangeJthIdxNew] = 5;
+         //update optimal value
+         if (cost + minCostChange < bestCost)
+         {
+            bestCost = cost + minCostChange;
+            cost = bestCost;
+
+            //updateSolutionGatePuckAssigned(puckAssign);
+         }
+      }
+
+
+      ++i;
+   }
+
+   puckAssign.end();
+   puckRemote.end();
+}
+
+
+int gam::getRegionIdx(const int gateIdx)
+{
+   int tempRegion;
+   if (gates[gateIdx]->getterminal() == "T" && gates[gateIdx]->getregion() == "North")
+   {
+      tempRegion = 0;//T_North-T_North
+   }
+   else if (gates[gateIdx]->getterminal() == "T" && gates[gateIdx]->getregion() == "Center")
+   {
+      tempRegion = 1;//
+   }
+   else if (gates[gateIdx]->getterminal() == "T" && gates[gateIdx]->getregion() == "South")
+   {
+      tempRegion = 2;//
+   }
+   else if (gates[gateIdx]->getterminal() == "S" && gates[gateIdx]->getregion() == "North")
+   {
+      tempRegion = 3;//
+   }
+   else if (gates[gateIdx]->getterminal() == "S" && gates[gateIdx]->getregion() == "Center")
+   {
+      tempRegion = 4;//
+   }
+   else if (gates[gateIdx]->getterminal() == "S" && gates[gateIdx]->getregion() == "South")
+   {
+      tempRegion = 5;//
+   }
+   else if (gates[gateIdx]->getterminal() == "S" && gates[gateIdx]->getregion() == "East")
+   {
+      tempRegion = 6;//
+   }
+
+   return tempRegion;
 }
